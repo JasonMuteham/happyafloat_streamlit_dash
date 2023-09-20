@@ -3,8 +3,9 @@ import duckdb
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 
-local = True
+local = False
 
 st.markdown('''
 
@@ -65,3 +66,8 @@ col2.bar_chart(motor_sail_hrs,
                y=["Motoring %","Sailing %"],
                color = [[.5,.5,.8], '#0000FF']
                )
+
+fig = px.bar(motor_sail_hrs, x="year", y=["Motoring %","Sailing %"],
+             barmode='group',
+             )
+st.plotly_chart(fig)
