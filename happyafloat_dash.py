@@ -1,9 +1,19 @@
 import streamlit as st
 import duckdb
-import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+
+st.set_page_config(
+    page_title="Happyafloat Dashboard",
+    page_icon="🧊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.happyafloat.com',
+        'Report a bug': "https://www.happyafloat.com",
+        'About': "# Happyafloat Dash\n\nNumber crunching data from our log book!"
+    }
+)
 
 @st.cache_resource(ttl=60*60)
 def define_connection(local):
