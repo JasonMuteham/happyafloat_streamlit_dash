@@ -25,7 +25,7 @@ def define_connection(local):
 
 @st.cache_data(ttl=60*60)
 def get_nm():
-    return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
+    return con.sql("USE happyafloat;SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
 @st.cache_data(ttl=60*60)
 def get_motoring_sailing_hrs():
