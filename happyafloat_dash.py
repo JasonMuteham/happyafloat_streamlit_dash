@@ -15,19 +15,23 @@ st.set_page_config(
     }
 )
 
-@st.cache_resource(ttl=60*60)
-def define_connection(local):
+local = True
+
+@st.cache_resource(ttl=3600)
+def define_connection_remote():
+        return duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
+
+
+def define_connection_local():
     if local:
-        con = duckdb.connect("data/happyafloat.duckdb", read_only=True)
-    else:
-        con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
-    return con
+        return duckdb.connect("data/happyafloat.duckdb", read_only=True)
 
-@st.cache_data(ttl=60*60)
+
+@st.cache_data(ttl=3600)
 def get_nm():
-    return con.sql("USE happyafloat;SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
+    return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
-@st.cache_data(ttl=60*60)
+@st.cache_data(ttl=3600)
 def get_motoring_sailing_hrs():
     return con.sql("""
                    SELECT Year, "Total Minutes", "motoring", "sailing", "Motoring %", "Sailing %", "Nautical Miles",
@@ -48,7 +52,7 @@ def get_motoring_sailing_hrs():
                     ORDER BY Year)
                 """).df()  # noqa: E501
 
-local = False
+
 
 st.markdown('''
 
@@ -57,8 +61,10 @@ st.markdown('''
 Family Adventures at Sea.
 ''')
 
-
-con=define_connection(local)
+if local:
+    con=define_connection_local()
+else:
+     con=define_connection_remote()
 
 #st.divider()
 tab1, tab2, tab3 = st.tabs(["Main", "Charts", "Map"])
