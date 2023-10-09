@@ -1,2 +1,2 @@
 plotly
-duckdb
+duckdb=0.8.1
