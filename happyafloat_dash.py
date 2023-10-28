@@ -32,7 +32,7 @@ def get_nm():
     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
 
-#@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600)
 def get_ports():
     return con.sql("""
                     SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
@@ -129,7 +129,6 @@ with tab2:
 with tab3:
     ports = get_ports()
     px_map_tiles = 'carto-darkmatter'
-    name=''
     plot_size = ports['visits']
     mg = dict(l=20, r=20, b=20, t=100)
     cp = {'lat':55,'lon':-3}
