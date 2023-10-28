@@ -35,7 +35,7 @@ def get_nm():
 #@st.cache_data(ttl=3600)
 def get_ports():
     return con.sql("""
-                    SELECT any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port)*100 as visits
+                    SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
                     FROM raw.log_data
                     JOIN raw.dim_locations on end_port = port 
                     WHERE end_port IS NOT NULL 
@@ -125,8 +125,18 @@ with tab2:
 
     col2.plotly_chart(fig, use_container_width=True)
 
+ 
 with tab3:
     ports = get_ports()
-    #ports
-    st.map(ports,latitude="latitude",longitude="longitude",size="visits",use_container_width=True)
-    
+    px_map_tiles = 'carto-darkmatter'
+    name=''
+    plot_size = ports['visits']
+    mg = dict(l=20, r=20, b=20, t=100)
+    cp = {'lat':55,'lon':-3}
+    fig = px.scatter_mapbox(ports, lat="latitude", lon="longitude", center=cp, 
+                            color=plot_size, color_continuous_scale='blues',
+                            opacity=0.8, zoom=4, size="visits", size_max=16, title='Ports 2019-2023', 
+                            height=670, hover_name="end_port", hover_data={"visits":True, "latitude":False, "longitude":False})
+    fig.update_coloraxes(colorbar_ticklabelposition='inside',colorbar_ticks='inside',cmax=20,cmin=1,showscale=False)
+    fig.update_layout(mapbox_style=px_map_tiles,margin=mg)
+    st.plotly_chart(fig, use_container_width=True)
