@@ -95,7 +95,7 @@ with tab2:
 
     motor_sail_hrs = get_motoring_sailing_hrs()
 
-#motor_sail_hrs       
+    motor_sail_hrs       
 
 
     fig = px.bar(motor_sail_hrs, x="Year", y=["Motoring %","Sailing %"],
