@@ -32,7 +32,7 @@ def get_nm():
     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
 
-@st.cache_data(ttl=3600)
+#@st.cache_data(ttl=3600)
 def get_ports():
     return con.sql("""
                     SELECT any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port)*100 as visits
