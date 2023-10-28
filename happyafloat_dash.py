@@ -134,7 +134,7 @@ with tab3:
     cp = {'lat':55,'lon':-3}
     fig = px.scatter_mapbox(ports, lat="latitude", lon="longitude", center=cp, 
                             color=plot_size, color_continuous_scale='blues',
-                            opacity=0.8, zoom=4, size="visits", size_max=16, title='Ports 2019-2023', 
+                            opacity=0.8, zoom=4, size="visits", size_max=16, title='Destinations 2019-2023', 
                             height=670, hover_name="end_port", hover_data={"visits":True, "latitude":False, "longitude":False})
     fig.update_coloraxes(colorbar_ticklabelposition='inside',colorbar_ticks='inside',cmax=20,cmin=1,showscale=False)
     fig.update_layout(mapbox_style=px_map_tiles,margin=mg)
