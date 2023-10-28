@@ -31,6 +31,16 @@ def define_connection_local():
 def get_nm():
     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
+
+@st.cache_data(ttl=3600)
+def get_ports():
+    return con.sql("""
+                    SELECT any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port)*100 as visits
+                    FROM raw.log_data
+                    JOIN raw.dim_locations on end_port = port 
+                    WHERE end_port IS NOT NULL 
+                    GROUP BY end_port""").df()   
+
 @st.cache_data(ttl=3600)
 def get_motoring_sailing_hrs():
     return con.sql("""
@@ -114,3 +124,9 @@ with tab2:
     fig.update_traces(hovertemplate='%{y} Nautical Miles',marker_line_color='blue', marker_line_width=1.0)
 
     col2.plotly_chart(fig, use_container_width=True)
+
+with tab3:
+    ports = get_ports()
+    #ports
+    st.map(ports,latitude="latitude",longitude="longitude",size="visits",use_container_width=True)
+    
