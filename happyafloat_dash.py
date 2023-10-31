@@ -16,7 +16,7 @@ st.set_page_config(
     }
 )
 
-local = Falsealse
+local = False
 
 @st.cache_resource(ttl=3600)
 def define_connection_remote():
