@@ -2,6 +2,7 @@ import streamlit as st
 import duckdb
 import plotly.graph_objects as go
 import plotly.express as px
+import pydeck as pdk
 
 st.set_page_config(
     page_title="Happyafloat Dashboard",
@@ -29,6 +30,7 @@ def define_connection_local():
 
 @st.cache_data(ttl=3600)
 def get_nm():
+    con.sql("USE happyafloat")
     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
 
@@ -40,6 +42,13 @@ def get_ports():
                     JOIN raw.dim_locations on end_port = port 
                     WHERE end_port IS NOT NULL 
                     GROUP BY end_port""").df()   
+def get_all_ports():
+    return con.sql("""
+                    SELECT latitude::FLOAT as lat, longitude::FLOAT as lng
+                    FROM raw.log_data
+                    JOIN raw.dim_locations on end_port = port 
+                    WHERE end_port IS NOT NULL 
+                    """).df()
 
 @st.cache_data(ttl=3600)
 def get_motoring_sailing_hrs():
@@ -76,7 +85,7 @@ if local:
 else:
      con=define_connection_remote()
 
-#st.divider()
+
 tab1, tab2, tab3 = st.tabs(["Main", "Charts", "Map"])
 with tab1:
     #with st.container():
@@ -139,3 +148,34 @@ with tab3:
     fig.update_coloraxes(colorbar_ticklabelposition='inside',colorbar_ticks='inside',cmax=20,cmin=1,showscale=False)
     fig.update_layout(mapbox_style=px_map_tiles,margin=mg)
     st.plotly_chart(fig, use_container_width=True)
+
+    all_ports = get_all_ports()
+    all_ports
+    st.pydeck_chart(pdk.Deck(
+    map_style=None,
+    initial_view_state=pdk.ViewState(
+        latitude=55,
+        longitude=-3,
+        zoom=4,
+        pitch=50,
+    ),
+    layers=[
+        pdk.Layer(
+           'HexagonLayer',
+           data=all_ports,
+           get_position='[lng, lat]',
+           radius=1000,
+           elevation_scale=10,
+           elevation_range=[0, 1000],
+           pickable=True,
+           extruded=True,
+        ),
+        pdk.Layer(
+            'ScatterplotLayer',
+            data=all_ports,
+            get_position='[lat, lng]',
+            get_color='[200, 30, 0, 160]',
+            get_radius=1000,
+        ),
+    ],
+))
