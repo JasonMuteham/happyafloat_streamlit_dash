@@ -24,16 +24,16 @@ def define_connection_remote():
         #con.sql(f'''USE {st.secrets["md_db"]}''')
         return con
 
-@st.cache_data
+
 def define_connection_local():
     if local:
         return duckdb.connect("data/happyafloat.duckdb", read_only=True)
     
-@st.cache_data
+
 def get_nm():
      return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
-@st.cache_data
+
 def get_ports():
     return con.sql("""
                     SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
@@ -41,7 +41,7 @@ def get_ports():
                     JOIN raw.dim_locations on end_port = port 
                     WHERE end_port IS NOT NULL 
                     GROUP BY end_port""").df()   
-@st.cache_data
+
 def get_all_ports():
     return con.sql("""
                     SELECT latitude::FLOAT as lat, longitude::FLOAT as lng
@@ -50,7 +50,7 @@ def get_all_ports():
                     WHERE end_port IS NOT NULL 
                     """).df()
 
-@st.cache_data
+
 def get_motoring_sailing_hrs():
     return con.sql("""
                    SELECT Year, "Total Minutes", "motoring", "sailing", "Motoring %", "Sailing %", "Nautical Miles",
