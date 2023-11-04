@@ -21,18 +21,18 @@ local = True
 
 def define_connection_remote():
         con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
-        #con.sql(f'''USE {st.secrets["md_db"]}''')
         return con
 
+@st.cache_resource
 def define_connection_local():
     if local:
         return duckdb.connect("happyafloat.duckdb", read_only=True)
     
-
+@st.cache_data
 def get_nm():
      return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
-
+@st.cache_data
 def get_ports():
     return con.sql("""
                     SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
@@ -41,6 +41,7 @@ def get_ports():
                     WHERE end_port IS NOT NULL 
                     GROUP BY end_port""").df()   
 
+@st.cache_data
 def get_all_ports():
     return con.sql("""
                     SELECT latitude::FLOAT as lat, longitude::FLOAT as lng
@@ -49,7 +50,7 @@ def get_all_ports():
                     WHERE end_port IS NOT NULL 
                     """).df()
 
-
+@st.cache_data
 def get_motoring_sailing_hrs():
     return con.sql("""
                    SELECT Year, "Total Minutes", "motoring", "sailing", "Motoring %", "Sailing %", "Nautical Miles",
@@ -77,15 +78,13 @@ if local:
 else:
     con=define_connection_remote()
 
-nm = get_nm()
-motor_sail_hrs = get_motoring_sailing_hrs()
-ports = get_ports()
-all_ports = get_all_ports()
+
+
+
 
 tab1, tab2, tab3 = st.tabs(["Main", "Charts", "Map"])
 with tab1:
-   
-
+        nm = get_nm()
         fig = go.Figure(go.Indicator(
             mode = "gauge+number",
             value = nm,
@@ -103,8 +102,7 @@ with tab1:
 with tab2:
 
     col1, col2 = st.columns(2)
-      
-
+    motor_sail_hrs = get_motoring_sailing_hrs()
 
     fig = px.bar(motor_sail_hrs, x="Year", y=["Motoring %","Sailing %"],
                  barmode='group',title = "Motoring vs Sailing",text_auto=True)
@@ -125,6 +123,8 @@ with tab2:
 
  
 with tab3:
+    ports = get_ports()
+    all_ports = get_all_ports()
     st.subheader('Destinations 2019-2023')
     px_map_tiles = 'carto-darkmatter'
     plot_size = ports['visits']
