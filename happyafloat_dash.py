@@ -129,7 +129,7 @@ with tab3:
     px_map_tiles = 'carto-darkmatter'
     plot_size = ports['visits']
     mg = dict(l=0, r=0, b=20, t=10)
-    cp = {'lat':55,'lon':-3}
+    cp = {'lat':55.6,'lon':-3}
     fig = px.scatter_mapbox(ports, lat="latitude", lon="longitude", center=cp, 
                             color=plot_size, color_continuous_scale='blues',
                             opacity=0.8, zoom=4, size="visits", size_max=16,  
@@ -142,10 +142,11 @@ with tab3:
     st.pydeck_chart(pdk.Deck(
     map_style=None,
     initial_view_state=pdk.ViewState(
-        latitude=52,
-        longitude=-3,
+        latitude=52.3,
+        longitude=-2,
         zoom=6,
-        pitch=75,
+        pitch=85,
+        bearing=350,
     ),    tooltip={
         'html': '<b>Visits:</b> {elevationValue}',
         'style': {'color': 'white'}
