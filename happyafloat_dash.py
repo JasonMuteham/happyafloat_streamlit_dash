@@ -21,7 +21,7 @@ local = False
 @st.cache_resource
 def define_connection_remote():
         con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
-        con.sql(f'''USE {st.secrets["md_db"]}''')
+        #con.sql(f'''USE {st.secrets["md_db"]}''')
         return con
 
 @st.cache_data
