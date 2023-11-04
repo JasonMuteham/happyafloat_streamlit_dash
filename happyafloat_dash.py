@@ -15,15 +15,14 @@ st.set_page_config(
         'About': "# Happyafloat Dash\n\nNumber crunching data from our log book!"
     }
 )
-
+st.title('happyafloat.com')
+st.subheader('Family Adventures at Sea')
 local = False
-
 
 def define_connection_remote():
         con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
         #con.sql(f'''USE {st.secrets["md_db"]}''')
         return con
-
 
 def define_connection_local():
     if local:
@@ -71,16 +70,10 @@ def get_motoring_sailing_hrs():
                     ORDER BY Year)
                 """).df()  # noqa: E501
 
-st.markdown('''
 
-# happyafloat.com
-
-Family Adventures at Sea.
-''')
 
 if local:
     con=define_connection_local()
-
 else:
     con=define_connection_remote()
 
