@@ -142,9 +142,9 @@ with tab3:
     st.pydeck_chart(pdk.Deck(
     map_style=None,
     initial_view_state=pdk.ViewState(
-        latitude=52.3,
-        longitude=-2,
-        zoom=6,
+        latitude=51.55,
+        longitude=0.75,
+        zoom=9.5,
         pitch=85,
         bearing=350,
     ),    tooltip={
@@ -156,7 +156,7 @@ with tab3:
            'HexagonLayer',
            data=all_ports,
            get_position='[lng, lat]',
-           radius=1000,
+           radius=100,
            elevation_scale=10,
            elevation_range=[0, 1000],
            pickable=True,
