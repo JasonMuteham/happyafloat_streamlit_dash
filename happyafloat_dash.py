@@ -17,7 +17,7 @@ st.set_page_config(
 )
 st.title('happyafloat.com')
 st.subheader('Family Adventures at Sea')
-local = False
+local = True
 
 def define_connection_remote():
         con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
@@ -26,7 +26,7 @@ def define_connection_remote():
 
 def define_connection_local():
     if local:
-        return duckdb.connect("data/happyafloat.duckdb", read_only=True)
+        return duckdb.connect("happyafloat.duckdb", read_only=True)
     
 
 def get_nm():
@@ -133,7 +133,7 @@ with tab3:
     fig = px.scatter_mapbox(ports, lat="latitude", lon="longitude", center=cp, 
                             color=plot_size, color_continuous_scale='blues',
                             opacity=0.8, zoom=4, size="visits", size_max=16,  
-                            height=670, hover_name="end_port", hover_data={"visits":True, "latitude":False, "longitude":False})
+                            height=500, hover_name="end_port", hover_data={"visits":True, "latitude":False, "longitude":False})
     fig.update_coloraxes(colorbar_ticklabelposition='inside',colorbar_ticks='inside',cmax=20,cmin=1,showscale=False)
     fig.update_layout(mapbox_style=px_map_tiles,margin=mg)
     st.plotly_chart(fig, use_container_width=True)
