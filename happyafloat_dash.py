@@ -146,7 +146,10 @@ with tab3:
         longitude=-3,
         zoom=6,
         pitch=75,
-    ),
+    ),    tooltip={
+        'html': '<b>Visits:</b> {elevationValue}',
+        'style': {'color': 'white'}
+    },
     layers=[
         pdk.Layer(
            'HexagonLayer',
