@@ -18,23 +18,22 @@ st.set_page_config(
 
 local = False
 
-@st.cache_resource(ttl=3600)
+@st.cache_resource
 def define_connection_remote():
-        return duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
+        con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
+        con.sql(f'''USE {st.secrets["md_db"]}''')
+        return con
 
-
+@st.cache_data
 def define_connection_local():
     if local:
         return duckdb.connect("data/happyafloat.duckdb", read_only=True)
-
-
-@st.cache_data(ttl=3600)
+    
+@st.cache_data
 def get_nm():
-    con.sql("USE happyafloat")
-    return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
+     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
 
-
-@st.cache_data(ttl=3600)
+@st.cache_data
 def get_ports():
     return con.sql("""
                     SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
@@ -42,6 +41,7 @@ def get_ports():
                     JOIN raw.dim_locations on end_port = port 
                     WHERE end_port IS NOT NULL 
                     GROUP BY end_port""").df()   
+@st.cache_data
 def get_all_ports():
     return con.sql("""
                     SELECT latitude::FLOAT as lat, longitude::FLOAT as lng
@@ -50,7 +50,7 @@ def get_all_ports():
                     WHERE end_port IS NOT NULL 
                     """).df()
 
-@st.cache_data(ttl=3600)
+@st.cache_data
 def get_motoring_sailing_hrs():
     return con.sql("""
                    SELECT Year, "Total Minutes", "motoring", "sailing", "Motoring %", "Sailing %", "Nautical Miles",
@@ -71,8 +71,6 @@ def get_motoring_sailing_hrs():
                     ORDER BY Year)
                 """).df()  # noqa: E501
 
-
-
 st.markdown('''
 
 # happyafloat.com
@@ -82,15 +80,18 @@ Family Adventures at Sea.
 
 if local:
     con=define_connection_local()
-else:
-     con=define_connection_remote()
 
+else:
+    con=define_connection_remote()
+
+nm = get_nm()
+motor_sail_hrs = get_motoring_sailing_hrs()
+ports = get_ports()
+all_ports = get_all_ports()
 
 tab1, tab2, tab3 = st.tabs(["Main", "Charts", "Map"])
 with tab1:
-    #with st.container():
-#   c1,c2,c3 = st.columns(3)
-        nm = get_nm()
+   
 
         fig = go.Figure(go.Indicator(
             mode = "gauge+number",
@@ -106,15 +107,10 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
 
 
-
-
 with tab2:
 
     col1, col2 = st.columns(2)
-
-    motor_sail_hrs = get_motoring_sailing_hrs()
-
-    motor_sail_hrs       
+      
 
 
     fig = px.bar(motor_sail_hrs, x="Year", y=["Motoring %","Sailing %"],
@@ -136,28 +132,27 @@ with tab2:
 
  
 with tab3:
-    ports = get_ports()
+    st.subheader('Destinations 2019-2023')
     px_map_tiles = 'carto-darkmatter'
     plot_size = ports['visits']
-    mg = dict(l=20, r=20, b=20, t=100)
+    mg = dict(l=0, r=0, b=20, t=10)
     cp = {'lat':55,'lon':-3}
     fig = px.scatter_mapbox(ports, lat="latitude", lon="longitude", center=cp, 
                             color=plot_size, color_continuous_scale='blues',
-                            opacity=0.8, zoom=4, size="visits", size_max=16, title='Destinations 2019-2023', 
+                            opacity=0.8, zoom=4, size="visits", size_max=16,  
                             height=670, hover_name="end_port", hover_data={"visits":True, "latitude":False, "longitude":False})
     fig.update_coloraxes(colorbar_ticklabelposition='inside',colorbar_ticks='inside',cmax=20,cmin=1,showscale=False)
     fig.update_layout(mapbox_style=px_map_tiles,margin=mg)
     st.plotly_chart(fig, use_container_width=True)
 
-    all_ports = get_all_ports()
-    all_ports
+
     st.pydeck_chart(pdk.Deck(
     map_style=None,
     initial_view_state=pdk.ViewState(
-        latitude=55,
+        latitude=52,
         longitude=-3,
-        zoom=4,
-        pitch=50,
+        zoom=6,
+        pitch=75,
     ),
     layers=[
         pdk.Layer(
