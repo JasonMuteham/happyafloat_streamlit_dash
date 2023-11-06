@@ -17,72 +17,36 @@ st.set_page_config(
 )
 st.title('happyafloat.com')
 st.subheader('Family Adventures at Sea')
-local = True
-
-def define_connection_remote():
-        con = duckdb.connect(f'''md:{st.secrets["md_db"]}?token={st.secrets["md_token"]}''',read_only=True)  # noqa: E501
-        return con
+api_url = st.secrets["api_url"]
 
 @st.cache_resource
-def define_connection_local():
-    if local:
-        return duckdb.connect("happyafloat.duckdb", read_only=True)
+def define_connection():
+        return duckdb.connect("")
     
-@st.cache_data
-def get_nm():
-     return con.sql("SELECT sum(nautical_miles)::integer AS 'NM' FROM raw.log_data").fetchall()[0][0]
+con=define_connection()    
 
 @st.cache_data
-def get_ports():
+def get_nm():
+     return con.sql(f"SELECT * FROM read_json_auto('{api_url}/nm/')").fetchall()[0][0]
+
+@st.cache_data
+def get_ports(ports):
     return con.sql("""
-                    SELECT end_port, any_value(latitude)::FLOAT as latitude, any_value(longitude)::FLOAT as longitude, COUNT(end_port) as visits
-                    FROM raw.log_data
-                    JOIN raw.dim_locations on end_port = port 
-                    WHERE end_port IS NOT NULL 
-                    GROUP BY end_port""").df()   
+                    SELECT end_port, any_value(lat)::FLOAT as latitude, any_value(lng)::FLOAT as longitude, COUNT(end_port) as visits
+                    FROM  ports
+                    GROUP BY end_port""").df()  
 
 @st.cache_data
 def get_all_ports():
-    return con.sql("""
-                    SELECT latitude::FLOAT as lat, longitude::FLOAT as lng
-                    FROM raw.log_data
-                    JOIN raw.dim_locations on end_port = port 
-                    WHERE end_port IS NOT NULL 
-                    """).df()
+    return con.sql(f"SELECT * FROM read_json_auto('{api_url}/ports/')").df()
 
 @st.cache_data
 def get_motoring_sailing_hrs():
-    return con.sql("""
-                   SELECT Year, "Total Minutes", "motoring", "sailing", "Motoring %", "Sailing %", "Nautical Miles",
-                   SUM("Nautical Miles") OVER (ORDER BY Year) AS "Rolling NM",
-                   ("motoring" / 60)::integer AS "Motoring Hrs",
-                   ("sailing" / 60)::integer AS "Sailing Hrs"
-                   FROM (
-                    SELECT
-                        YEAR(log_date)::varchar AS "Year", 
-                        SUM(motoring_minutes + (motoring_hours * 60 )) + SUM(sailing_minutes + (sailing_hours * 60 )) AS "Total Minutes",
-                        SUM(motoring_minutes + (motoring_hours * 60 )) AS "motoring", 
-                        SUM(sailing_minutes + (sailing_hours * 60 )) AS "sailing",
-                        ((motoring / "Total Minutes")*100)::Decimal(4,1) AS "Motoring %",
-                        ((sailing / "Total Minutes")*100)::decimal(4,1) AS "Sailing %",
-                        SUM(nautical_miles)::integer AS "Nautical Miles"
-                    FROM raw.log_data
-                    GROUP BY Year 
-                    ORDER BY Year)
-                """).df()  # noqa: E501
+    return con.sql(f"SELECT * FROM read_json_auto('{api_url}/hours/')").df()
+    
 
 
-
-if local:
-    con=define_connection_local()
-else:
-    con=define_connection_remote()
-
-
-
-
-
-tab1, tab2, tab3 = st.tabs(["Main", "Charts", "Map"])
+tab1, tab2, tab3 , tab4 = st.tabs(["Main", "Charts", "Map", "Data"])
 with tab1:
         nm = get_nm()
         fig = go.Figure(go.Indicator(
@@ -123,8 +87,8 @@ with tab2:
 
  
 with tab3:
-    ports = get_ports()
     all_ports = get_all_ports()
+    ports = get_ports(all_ports)
     st.subheader('Destinations 2019-2023')
     px_map_tiles = 'carto-darkmatter'
     plot_size = ports['visits']
@@ -171,3 +135,19 @@ with tab3:
         ),
     ],
 ))
+    
+with tab4:
+    """
+    Ports
+    """
+    ports
+
+    """
+    All Ports
+    """
+    all_ports
+
+    """
+    motor_sail_hrs
+    """
+    motor_sail_hrs
